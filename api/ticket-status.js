@@ -67,13 +67,21 @@ module.exports = async (req, res) => {
       }
     );
 
-    if (!hubspotResponse.ok) {
-      const text = await hubspotResponse.text();
-      console.error("HubSpot error:", text);
-      return res
-        .status(hubspotResponse.status)
-        .json({ error: "HubSpot API error", details: text });
-    }
+ if (!hubspotResponse.ok) {
+  const text = await hubspotResponse.text();
+  console.error("HubSpot error:", text);
+
+  let hubspotJson;
+  try {
+    hubspotJson = JSON.parse(text);
+  } catch (e) {
+    hubspotJson = { raw: text };
+  }
+
+  return res
+    .status(hubspotResponse.status)
+    .json({ error: "HubSpot API error", hubspot: hubspotJson });
+}
 
     const data = await hubspotResponse.json();
 
