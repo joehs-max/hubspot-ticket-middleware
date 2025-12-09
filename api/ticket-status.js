@@ -59,26 +59,26 @@ module.exports = async (req, res) => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          filterGroups: [
-            {
-              filters: [
-                {
-                  propertyName: "ticket_id",
-                  operator: "EQ",
-                  value: String(ticket_id),
-                },
-              ],
-            },
-          ],
-          properties: [
-            "ticket_id",
-            "customer_ticket_stage",
-            "customer_ticket_description",
-            "customer_ticket_outlook",
-          ],
-          limit: 1,
-        }),
+       body: JSON.stringify({
+  filterGroups: [
+    {
+      filters: [
+        {
+          propertyName: "hs_ticket_id", // ✅ internal ID property
+          operator: "EQ",
+          value: String(ticket_id),
+        },
+      ],
+    },
+  ],
+  properties: [
+    "hs_ticket_id",                // ✅ ID
+    "customer_ticket_stage",       // ✅ stage internal name
+    "customer_ticket_description", // ✅ description internal name
+    "customer_ticket_outlook"      // ✅ outlook internal name
+  ],
+  limit: 1,
+}),
       }
     );
 
@@ -104,16 +104,16 @@ module.exports = async (req, res) => {
       return res.status(404).json({ found: false });
     }
 
-    const ticket = data.results[0].properties;
+   const ticket = data.results[0].properties;
 
-    // Normalized response for HubSpot action
-    return res.status(200).json({
-      found: true,
-      ticket_id: ticket.ticket_id,
-      customer_ticket_stage: ticket.customer_ticket_stage,
-      customer_ticket_description: ticket.customer_ticket_description,
-      customer_ticket_outlook: ticket.customer_ticket_outlook,
-    });
+// ---- Normalized response back to HubSpot action ----
+return res.status(200).json({
+  found: true,
+  ticket_id: ticket.hs_ticket_id,               // ✅ comes from hs_ticket_id
+  customer_ticket_stage: ticket.customer_ticket_stage,
+  customer_ticket_description: ticket.customer_ticket_description,
+  customer_ticket_outlook: ticket.customer_ticket_outlook,
+});
   } catch (err) {
     console.error("Middleware error:", err);
     return res.status(500).json({ error: "Server error" });
