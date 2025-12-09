@@ -11,9 +11,11 @@ module.exports = async (req, res) => {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  try {
-    // 🔽 NEW: ensure we parse the JSON body correctly
+   try {
+    // ---- Robust JSON body parsing ----
     let body = req.body;
+
+    // If it's a string, try to parse JSON
     if (typeof body === "string") {
       try {
         body = JSON.parse(body || "{}");
@@ -22,9 +24,22 @@ module.exports = async (req, res) => {
       }
     }
 
-    const { ticket_id } = body || {};
+    // If it's an array (e.g. you sent [{ "ticket_id": "..." }]), take first element
+    if (Array.isArray(body)) {
+      body = body[0] || {};
+    }
+
+    // Try multiple common casings / keys just in case
+    const ticket_id =
+      body.ticket_id ||
+      body.ticketId ||
+      body.Ticket_id ||
+      body.TicketID ||
+      null;
 
     if (!ticket_id) {
+      // For debugging, it can help to see what body actually is:
+      console.error("Request body did not contain ticket_id:", body);
       return res.status(400).json({ error: "ticket_id is required" });
     }
 
